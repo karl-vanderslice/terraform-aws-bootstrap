@@ -1,5 +1,6 @@
 # Local Terraform working directory
 .terraform/
+result
 
 # Keep lock file committed even if globally ignored.
 !flake.lock
