@@ -1,0 +1,3 @@
+# Pre-commit hooks are managed via flake.nix (git-hooks.nix).
+# Run `just install-hooks` to install them into .git/hooks.
+repos: []

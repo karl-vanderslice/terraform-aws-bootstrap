@@ -1,0 +1,15 @@
+[project]
+site_name = "terraform-aws-bootstrap"
+site_description = "Terraform bootstrap for AWS account and IAM foundation"
+site_url = "https://github.com/karl-vanderslice/terraform-aws-bootstrap"
+repo_name = "karl-vanderslice/terraform-aws-bootstrap"
+repo_url = "https://github.com/karl-vanderslice/terraform-aws-bootstrap"
+docs_dir = "docs"
+site_dir = "site"
+nav = [{ Home = "index.md" }, { README = "README.md" }]
+
+[project.theme]
+variant = "modern"
+
+[project.theme.palette]
+scheme = "slate"
