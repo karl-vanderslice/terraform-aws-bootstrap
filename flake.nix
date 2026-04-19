@@ -114,6 +114,7 @@
         packages = with pkgs; [
           awscli2
           terraform
+          vault
           terraform-docs
           checkov
           gitleaks

@@ -29,4 +29,20 @@ output "vault_iam_secret_access_key" {
   value       = aws_iam_access_key.vault.secret
   sensitive   = true
 }
+
+output "aws_mcp_access_key_id" {
+  description = "Access key ID for the AWS API MCP IAM user."
+  value       = aws_iam_access_key.aws_mcp.id
+}
+
+output "aws_mcp_secret_access_key" {
+  description = "Secret access key for the AWS API MCP IAM user."
+  value       = aws_iam_access_key.aws_mcp.secret
+  sensitive   = true
+}
+
+output "aws_region" {
+  description = "AWS region configured for bootstrap resources."
+  value       = var.aws_region
+}
 # Add outputs here as resources are provisioned.

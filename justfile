@@ -44,6 +44,9 @@ bw-push:
   OPS_SECRET=$(nix develop -c terraform output -raw ops_bucket_secret_access_key)
   VAULT_KEY=$(nix develop -c terraform output -raw vault_iam_access_key_id)
   VAULT_SECRET=$(nix develop -c terraform output -raw vault_iam_secret_access_key)
+  AWS_MCP_KEY=$(nix develop -c terraform output -raw aws_mcp_access_key_id)
+  AWS_MCP_SECRET=$(nix develop -c terraform output -raw aws_mcp_secret_access_key)
+  AWS_REGION=$(nix develop -c terraform output -raw aws_region)
   EXISTING=$(bw list items --search "AWS Bootstrap Outputs" 2>/dev/null | python3 -c "import sys,json; items=json.load(sys.stdin); print(items[0]['id'] if items else '')" 2>/dev/null || echo "")
   PAYLOAD=$(python3 -c "
   import json, sys
@@ -60,6 +63,9 @@ bw-push:
       {'name': 'OPS_BUCKET_SECRET_ACCESS_KEY', 'value': '$OPS_SECRET',   'type': 1},
       {'name': 'VAULT_IAM_ACCESS_KEY_ID',      'value': '$VAULT_KEY',    'type': 0},
       {'name': 'VAULT_IAM_SECRET_ACCESS_KEY',  'value': '$VAULT_SECRET', 'type': 1},
+      {'name': 'AWS_MCP_ACCESS_KEY_ID',        'value': '$AWS_MCP_KEY',  'type': 0},
+      {'name': 'AWS_MCP_SECRET_ACCESS_KEY',    'value': '$AWS_MCP_SECRET', 'type': 1},
+      {'name': 'AWS_MCP_REGION',               'value': '$AWS_REGION',   'type': 0},
     ]
   }
   print(json.dumps(item))

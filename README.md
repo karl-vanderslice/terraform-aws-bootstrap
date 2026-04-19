@@ -7,8 +7,10 @@ account-level guardrails. State is stored in Terraform Cloud.
 
 - AWS provider configuration
 - Account-level defaults and tagging policy
-- Foundation IAM roles and policies (to be added)
-- S3 buckets for shared tooling (to be added)
+- S3 ops bucket with versioning, SSE, and public access block
+- Vault AWS secrets engine IAM user and long-lived access key
+- AWS API MCP IAM user with `ReadOnlyAccess` and `sts:GetCallerIdentity`
+  permissions
 
 ## Prerequisites
 
