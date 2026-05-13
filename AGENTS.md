@@ -1,18 +1,20 @@
 # AGENTS
 
-## Purpose
+## Snapshot
 
-This repository bootstraps AWS account foundation resources and related access
-primitives.
+- Purpose: this repo bootstraps AWS account foundation resources and related
+  access primitives.
+- Load order: load this file first. Repo-local prompt/skill overlays are not
+  present yet.
+- Primary docs: `README.md`, `docs/index.md`, and generated `terraform-docs`
+  reference blocks.
 
-## Documentation Standards
+## Working Rules
 
-- Keep `README.md` as the GitHub entrypoint and `docs/index.md` as the docs
-  landing page.
-- Do not add duplicate overview pages such as `docs/README.md`.
 - Keep Terraform variable, output, and module descriptions complete enough for
   `terraform-docs`; generated Markdown is the canonical reference surface.
 - Prefer `just` targets in docs when they exist instead of duplicating raw
   Terraform and shell commands.
-- Keep credential flow, state backend notes, and account-guardrail rationale in
-  task or explanation docs, not in generated reference tables.
+- Keep credential flow, state backend notes, and account guardrail rationale in
+  explanation docs, not in generated reference tables.
+- Do not add duplicate overview pages such as `docs/README.md`.
