@@ -35,8 +35,7 @@ ci:
 terraform-docs:
   nix develop -c terraform-docs markdown table --output-file README.md --output-mode inject .
 
-bw-push:
-  #!/usr/bin/env bash
+rbw-push:
   set -euo pipefail
   BUCKET=$(nix develop -c terraform output -raw ops_bucket_name)
   BUCKET_ARN=$(nix develop -c terraform output -raw ops_bucket_arn)
@@ -47,44 +46,28 @@ bw-push:
   AWS_MCP_KEY=$(nix develop -c terraform output -raw aws_mcp_access_key_id)
   AWS_MCP_SECRET=$(nix develop -c terraform output -raw aws_mcp_secret_access_key)
   AWS_REGION=$(nix develop -c terraform output -raw aws_region)
-  EXISTING=$(bw list items --search "AWS Bootstrap Outputs" 2>/dev/null | python3 -c "import sys,json; items=json.load(sys.stdin); print(items[0]['id'] if items else '')" 2>/dev/null || echo "")
-  PAYLOAD=$(python3 -c "
-  import json, sys
-  item = {
-    'organizationId': None,
-    'collectionIds': [],
-    'type': 2,
-    'name': 'AWS Bootstrap Outputs',
-    'notes': '',
-    'fields': [
-      {'name': 'OPS_BUCKET_NAME',              'value': '$BUCKET',       'type': 0},
-      {'name': 'OPS_BUCKET_ARN',               'value': '$BUCKET_ARN',   'type': 0},
-      {'name': 'OPS_BUCKET_ACCESS_KEY_ID',     'value': '$OPS_KEY',      'type': 0},
-      {'name': 'OPS_BUCKET_SECRET_ACCESS_KEY', 'value': '$OPS_SECRET',   'type': 1},
-      {'name': 'VAULT_IAM_ACCESS_KEY_ID',      'value': '$VAULT_KEY',    'type': 0},
-      {'name': 'VAULT_IAM_SECRET_ACCESS_KEY',  'value': '$VAULT_SECRET', 'type': 1},
-      {'name': 'AWS_MCP_ACCESS_KEY_ID',        'value': '$AWS_MCP_KEY',  'type': 0},
-      {'name': 'AWS_MCP_SECRET_ACCESS_KEY',    'value': '$AWS_MCP_SECRET', 'type': 1},
-      {'name': 'AWS_MCP_REGION',               'value': '$AWS_REGION',   'type': 0},
-    ]
-  }
-  print(json.dumps(item))
-  ")
-  if [[ -z "${EXISTING}" ]]; then
-    ITEM_JSON=$(echo "${PAYLOAD}" | bw encode | bw create item)
-    ITEM_ID=$(echo "${ITEM_JSON}" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
-    ORG_ID=$(bw list organizations 2>/dev/null | python3 -c "import sys,json; orgs=json.load(sys.stdin); print(next((o['id'] for o in orgs if 'ai' in o['name'].lower()), orgs[0]['id'])" 2>/dev/null || echo "")
-    COLL_ID=$(bw list org-collections --organizationid "${ORG_ID}" 2>/dev/null | python3 -c "import sys,json; colls=json.load(sys.stdin); print(next((c['id'] for c in colls if 'shared' in c['name'].lower()), ''))" 2>/dev/null || echo "")
-    if [[ -n "${ORG_ID}" && -n "${COLL_ID}" ]]; then
-      bw share "${ITEM_ID}" "${ORG_ID}" "${COLL_ID}" > /dev/null
-    fi
+  PAYLOAD=$(jq -nc \
+    --arg OPS_BUCKET_NAME "$BUCKET" \
+    --arg OPS_BUCKET_ARN "$BUCKET_ARN" \
+    --arg OPS_BUCKET_ACCESS_KEY_ID "$OPS_KEY" \
+    --arg OPS_BUCKET_SECRET_ACCESS_KEY "$OPS_SECRET" \
+    --arg VAULT_IAM_ACCESS_KEY_ID "$VAULT_KEY" \
+    --arg VAULT_IAM_SECRET_ACCESS_KEY "$VAULT_SECRET" \
+    --arg AWS_MCP_ACCESS_KEY_ID "$AWS_MCP_KEY" \
+    --arg AWS_MCP_SECRET_ACCESS_KEY "$AWS_MCP_SECRET" \
+    --arg AWS_MCP_REGION "$AWS_REGION" \
+    '{OPS_BUCKET_NAME:$OPS_BUCKET_NAME,OPS_BUCKET_ARN:$OPS_BUCKET_ARN,OPS_BUCKET_ACCESS_KEY_ID:$OPS_BUCKET_ACCESS_KEY_ID,OPS_BUCKET_SECRET_ACCESS_KEY:$OPS_BUCKET_SECRET_ACCESS_KEY,VAULT_IAM_ACCESS_KEY_ID:$VAULT_IAM_ACCESS_KEY_ID,VAULT_IAM_SECRET_ACCESS_KEY:$VAULT_IAM_SECRET_ACCESS_KEY,AWS_MCP_ACCESS_KEY_ID:$AWS_MCP_ACCESS_KEY_ID,AWS_MCP_SECRET_ACCESS_KEY:$AWS_MCP_SECRET_ACCESS_KEY,AWS_MCP_REGION:$AWS_MCP_REGION}')
+  rbw unlock >/dev/null
+  rbw sync >/dev/null
+  tmp_note=$(mktemp)
+  printf 'managed-by-terraform-aws-bootstrap\n%s\n' "$PAYLOAD" >"$tmp_note"
+  tmp_editor=$(mktemp)
+  printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'cat "$TMP_RBW_NOTE" >"$1"' >"$tmp_editor"
+  chmod +x "$tmp_editor"
+  if rbw get "AWS Bootstrap Outputs" >/dev/null 2>&1; then
+  TMP_RBW_NOTE="$tmp_note" EDITOR="$tmp_editor" rbw edit "AWS Bootstrap Outputs" >/dev/null
   else
-    bw get item "${EXISTING}" | python3 -c "
-  import sys, json
-  item = json.load(sys.stdin)
-  new_fields = json.loads('$PAYLOAD')['fields']
-  item['fields'] = new_fields
-  print(json.dumps(item))
-  " | bw encode | bw edit item "${EXISTING}" > /dev/null
+  TMP_RBW_NOTE="$tmp_note" EDITOR="$tmp_editor" rbw add "AWS Bootstrap Outputs" >/dev/null
   fi
-  echo "Bitwarden item 'AWS Bootstrap Outputs' updated."
+  rm -f "$tmp_note" "$tmp_editor"
+  echo "rbw item 'AWS Bootstrap Outputs' updated."
